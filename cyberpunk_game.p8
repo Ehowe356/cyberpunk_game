@@ -4,7 +4,7 @@ __lua__
 -- inital setup
 function _init()
     player={
-        sp=1,
+        spr=1,
         x=59,
         y=59,
         w=8,
@@ -30,13 +30,13 @@ end
 
 function _update()
    player_update()
-   
+   player_animate()
 end
 
 function _draw()
     cls()
     map(0,0)
-    spr(player.sp,player.x,player.y,1,1,player.flipx)
+    spr(player.spr,player.x,player.y,1,1,player.flipx)
     
 end
 
@@ -116,14 +116,79 @@ function player_update()
     end
 
     --jump
-    if btnp(x)
+    if btnp(2)
     and player.landed then 
         player.dy-=player.boost
         player.landed=false
     end
+    --collision check
+    if player.dy>0 then
+        player.falling=true
+        player.landed=false
+        player.jumping=false
+        if collisions_map(player,"down",0) then
+            player.landed=true
+            player.falling=false
+            player.dy=0
+            player.y-=(player.y+player.h)%8
+        end
+    
 
+    elseif player.dy<0 then
+        player.jumping=true
+        if collisions_map(player,"up",1) then
+            player.dy=0
+        end
+    end
+
+    if player.dx<0 then
+        if collisions_map(player,"left",1) then
+            player.dx=0
+        end
+    elseif player.dx>0 then
+        if collisions_map(player,"right",1) then
+            player.dx=0
+        end
+    end
+
+    if player.sliding then
+        if abs(player.dx)<.2
+        or player.running then
+            player.dx=0
+            player.sliding=false
+        end
+    end
     player.x+=player.dx
     player.y+=player.dy
+ 
+
+end
+
+function player_animate()
+    if player.jumping then
+        player.spr=7
+    elseif player.falling then
+        player.spr =8
+    elseif player.sliding then 
+        player.spr=9
+    elseif player.running then  
+        if time() - player.anime > .1 then
+            player.anime=time()
+            player.spr+=1
+            if player.spr>6 then
+                player.spr=3
+            end
+        end
+    else 
+        if time()- player.anime>.3 then
+            player.anime=time()
+            player.spr+=1
+            if player.spr>2 then
+                player.spr=1
+            end
+        end
+    end
+
 end
 __gfx__
 00000000006666600066666000666660006666600066666000666660006666600066666000000000000000000000000000000000000000000000000000000000
@@ -231,7 +296,7 @@ a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0111111111111111111111111111111111111111111111111
 11111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000
 11111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000
 __gff__
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003030303030300000000000000000000030303030300000000000000000000000101010100000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003030303030300000000000000000000030303030300000000000000000000000101010100000000000000000000000001010000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 4747474747474747474747474747474700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
